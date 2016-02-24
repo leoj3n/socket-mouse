@@ -3,8 +3,16 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-2.2.1.min.js"></script>
     <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
 
     <style media="screen">
+      #dragalert {
+        width: 100px;
+        height: 100px;
+        background: red;
+        position: absolute;
+      }
       #draggable {
         width: 100px;
         height: 100px;
@@ -13,37 +21,35 @@
     </style>
   </head>
   <body>
-    <div id="dragalert" style="display: none;">DRAGGING!</div>
-    <div id="draggable" style="display: none;">DRAG ME ON PHONE</div> 
+    <div id="dragalert" style="display: none;"></div>
+    <div id="draggable" style="display: none;"></div> 
     </div>
 
     <script type="text/javascript">
       $(document).ready(function() {
         var socket = io();
         var client = Math.random() + Date.now();
-        var mobile = (typeof window.orientation) !== "undefined";
         var dragged;
 
-        if (mobile) {
-          $('#draggable').draggable({
-              start: function( event, ui ) {
-                socket.emit('drags', {client: client});
-                alert('hi');
-              },
-              stop: function( event, ui ) {
-                socket.emit('drage', {client: client});
-              }
-          }).show();
-        }
+        $('html.touch #draggable').draggable({
+            drag: function( event, ui ) {
+              socket.emit('drags', {
+                client: client, top: ui.position.top, left: ui.position.left
+              });
+            },
+            stop: function( event, ui ) {
+              socket.emit('drage', {client: client});
+            }
+        }).show();
 
-        socket.on('drags', function(coords) {
-          if (coords.client != client) {
-            $('#dragalert').show();
+        socket.on('drags', function(msg) {
+          if (msg.client != client) {
+          $('#dragalert').css({top: msg.top, left: msg.left}).show();
           }
         });
 
-        socket.on('drage', function(coords) {
-          if (coords.client != client) {
+        socket.on('drage', function(msg) {
+          if (msg.client != client) {
             $('#dragalert').hide();
           }
         });
