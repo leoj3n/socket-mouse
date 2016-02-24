@@ -1,13 +1,20 @@
 <html>
   <head>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="http://code.jquery.com/jquery-2.2.1.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
-    <style media="screen"></style>
+    <style media="screen">
+      #draggable {
+        width: 100px;
+        height: 100px;
+        background: #ccc;
+      }
+    </style>
   </head>
   <body>
     <div id="dragalert" style="display: none;">DRAGGING!</div>
-    <div id="draggable" style="display: none;" draggable="true" ondragstart="event.dataTransfer.setData('text/plain',null)">DRAG ME ON PHONE</div> 
+    <div id="draggable" style="display: none;">DRAG ME ON PHONE</div> 
     </div>
 
     <script type="text/javascript">
@@ -18,19 +25,16 @@
         var dragged;
 
         if (mobile) {
-          $('#draggable').show();
+          $('#draggable').draggable({
+              start: function( event, ui ) {
+                socket.emit('drags', {client: client});
+                alert('hi');
+              },
+              stop: function( event, ui ) {
+                socket.emit('drage', {client: client});
+              }
+          }).show();
         }
-
-        document.addEventListener("dragstart", function( event ) {
-            dragged = event.target;
-            event.target.style.opacity = .5;
-            socket.emit('drags', {client: client});
-        }, false);
-
-        document.addEventListener("dragend", function( event ) {
-            event.target.style.opacity = "";
-            socket.emit('drage', {client: client});
-        }, false);
 
         socket.on('drags', function(coords) {
           if (coords.client != client) {
